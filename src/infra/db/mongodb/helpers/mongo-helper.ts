@@ -1,10 +1,10 @@
 import { Collection, MongoClient } from 'mongodb'
 
 export const MongoHelper = {
-  client: null as unknown as MongoClient,
+  client: (null as unknown) as MongoClient,
 
   async connect (uri: string): Promise<void> {
-    this.client = await MongoClient.connect(process.env.MONGO_URL as string, {
+    this.client = await MongoClient.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
@@ -22,5 +22,4 @@ export const MongoHelper = {
     const { _id, ...collectionResult } = collection
     return Object.assign({}, collectionResult, { id: _id })
   }
-
 }
