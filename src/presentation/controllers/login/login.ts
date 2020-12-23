@@ -1,8 +1,6 @@
-import { Authentication } from '../../../domain/usecases/authentication'
 import { InvalidParamError, MissingParamError } from '../../errors'
-import { badRequest, serverError } from '../../helpers/http-helper'
-import { Controller, HttpRequest, HttpResponse } from '../../protocols'
-import { EmailValidator } from '../signup/signup-protocols'
+import { Controller, HttpRequest, HttpResponse, EmailValidator, Authentication } from './login-protocols'
+import { badRequest, created, serverError, unauthorized } from '../../helpers/http-helper'
 
 export class LoginController implements Controller {
   private readonly emailValidator: EmailValidator
@@ -18,7 +16,7 @@ export class LoginController implements Controller {
       const requiredFields = ['email', 'password']
       for (const field of requiredFields) {
         if (!httpRequest.body[field]) {
-          return await new Promise(resolve => resolve(badRequest(new MissingParamError(field))))
+          return badRequest(new MissingParamError(field))
         }
       }
 
@@ -30,12 +28,13 @@ export class LoginController implements Controller {
 
       const { email, password } = httpRequest.body
 
-      await this.authentication.auth(email, password)
+      const accessToken = await this.authentication.auth(email, password)
 
-      return {
-        statusCode: 200,
-        body: {}
+      if (!accessToken) {
+        return unauthorized()
       }
+
+      return created({ accessToken })
     } catch (error) {
       return serverError(error)
     }
